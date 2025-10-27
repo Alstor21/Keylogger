@@ -1,0 +1,6 @@
+keyboard
+os
+getpass
+base64
+requests
+flask
