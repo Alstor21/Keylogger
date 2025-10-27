@@ -20,4 +20,4 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
                 data = connection.recv(1024)    # Receive data from client
                 if not data:
                     break                       # Exit loop if no data received
-                revieved_file.write(data)       # Write received data to file
+                recieved_file.write(data)       # Write received data to file
